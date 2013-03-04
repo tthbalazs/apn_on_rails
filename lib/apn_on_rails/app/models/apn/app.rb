@@ -40,19 +40,18 @@ class APN::App < APN::Base
   def self.send_notifications_for_cert(the_cert, app_id)
     # unless self.unsent_notifications.nil? || self.unsent_notifications.empty?
       if (app_id == nil)
-        conditions = "app_id is null"
+        conditions = "app_id is null and sent_at is null"
       else 
-        conditions = ["app_id = ?", app_id]
+        conditions = ["app_id = ? and sent_at is null", app_id]
       end
       begin
-        APN::Connection.open_for_delivery({:cert => the_cert}) do |conn, sock|
-          APN::Device.find_each(:conditions => conditions) do |dev|
-            dev.unsent_notifications.each do |noty|
-              conn.write(noty.message_for_sending)
-              noty.sent_at = Time.now
-              noty.save
-            end
-          end
+				APN::Connection.open_for_delivery({:cert => the_cert}) do |conn, sock|
+					notifications = APN::Notification.find(:all, :select => "apn_notifications.*", :conditions => conditions, :joins => " INNER JOIN apn_devices ON apn_devices.id = apn_notifications.device_id")
+					notifications.each do |noty|
+						conn.write(noty.message_for_sending)
+						noty.sent_at = Time.now
+						noty.save
+					end
         end
       rescue Exception => e
         log_connection_exception(e)
