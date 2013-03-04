@@ -20,11 +20,8 @@ describe APN::App do
       APN::App.should_receive(:all).once.and_return([app])                 
       app.should_receive(:cert).twice.and_return(app.apn_dev_cert)
       
-      APN::Device.should_receive(:find_each).twice.and_yield(device)
-      
-      device.should_receive(:unsent_notifications).and_return(notifications,[])
-      
-      
+			APN::Notification.should_receive(:find).and_return(notifications, [])      
+
       ssl_mock = mock('ssl_mock')
       ssl_mock.should_receive(:write).with('message-0')
       ssl_mock.should_receive(:write).with('message-1')
@@ -52,8 +49,7 @@ describe APN::App do
          notify.should_receive(:save)
        end  
    
-       APN::Device.should_receive(:find_each).and_yield(device)
-       device.should_receive(:unsent_notifications).and_return(notifications)
+			 APN::Notification.should_receive(:find).and_return(notifications)
   
        ssl_mock = mock('ssl_mock')
        ssl_mock.should_receive(:write).with('message-0')
